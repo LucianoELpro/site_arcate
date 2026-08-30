@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0a0f; }
+  * { box-sizing: border-box; }
+  a { color: #00f5ff; text-decoration: none; }
+  a:hover { color: #f5ff00; }
+  input, button { font-family: inherit; }
+  input::placeholder { color: rgba(215,215,224,.35); }
+  @keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(60px); } }
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 24%, 55% { opacity: .55; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 rgba(255,0,110,.0), 0 0 18px rgba(255,0,110,.45); }
+    50% { box-shadow: 0 0 0 rgba(255,0,110,.0), 0 0 42px rgba(255,0,110,.95); }
+  }
+  @keyframes rowIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes scanWipe { from { transform: translateY(-100%); } to { transform: translateY(400%); } }
+</style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; background:#0a0a0f; color:#d7d7e0; font-family:'Courier Prime',monospace; overflow-x:hidden">
+
+  <div style="position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(120% 80% at 50% 0%, rgba(0,245,255,.10), transparent 60%), radial-gradient(100% 70% at 80% 100%, rgba(255,0,110,.10), transparent 60%)"></div>
+  <div style="position:fixed; left:-25%; right:-25%; bottom:-10%; height:70vh; pointer-events:none; z-index:0; opacity:.25; transform:perspective(420px) rotateX(72deg); background-image:linear-gradient(rgba(0,245,255,.55) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,.35) 1px, transparent 1px); background-size:60px 60px; animation:gridMove 2.4s linear infinite; mask-image:linear-gradient(to top, #000, transparent)"></div>
+  <sc-if value="{{ scanlines }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed; inset:0; pointer-events:none; z-index:60; background:repeating-linear-gradient(to bottom, rgba(0,0,0,.30) 0px, rgba(0,0,0,.30) 1px, transparent 1px, transparent 3px); mix-blend-mode:multiply"></div>
+  </sc-if>
+
+  <nav style="position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 22px; background:rgba(10,10,15,.86); backdrop-filter:blur(8px); border-bottom:1px solid rgba(0,245,255,.28); box-shadow:0 6px 30px rgba(0,0,0,.6)">
+    <div onClick="{{ goLib }}" style="cursor:pointer; font-family:'Press Start 2P',monospace; font-size:13px; letter-spacing:1px; color:#00f5ff; text-shadow:0 0 10px rgba(0,245,255,.9), 0 0 26px rgba(0,245,255,.45)">ARCADE<span style="color:#ff006e; text-shadow:0 0 10px rgba(255,0,110,.9)"> VAULT</span></div>
+
+    <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; align-items:center; gap:26px">
+        <div onClick="{{ goLib }}" style="cursor:pointer; font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#d7d7e0; padding-bottom:5px; border-bottom:2px solid transparent" style-hover="color:#00f5ff; border-bottom:2px solid #00f5ff">Biblioteca</div>
+        <div onClick="{{ goHall }}" style="cursor:pointer; font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#d7d7e0; padding-bottom:5px; border-bottom:2px solid transparent" style-hover="color:#00f5ff; border-bottom:2px solid #00f5ff">Salón de la Fama</div>
+        <div style="width:1px; height:22px; background:rgba(0,245,255,.25)"></div>
+        <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:34px; height:34px; display:grid; place-items:center; border:1px solid #f5ff00; color:#f5ff00; font-family:'Press Start 2P',monospace; font-size:11px; box-shadow:0 0 14px rgba(245,255,0,.4)">{{ userInitial }}</div>
+            <div style="font-size:12px; letter-spacing:1px">{{ userName }}</div>
+            <div onClick="{{ logout }}" style="cursor:pointer; font-size:11px; letter-spacing:1px; color:rgba(215,215,224,.5)" style-hover="color:#ff006e">SALIR</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ goAuth }}" style="cursor:pointer; padding:10px 16px; font-family:'Press Start 2P',monospace; font-size:10px; color:#0a0a0f; background:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.5)" style-hover="background:#f5ff00; box-shadow:0 0 24px rgba(245,255,0,.6)" style-active="transform:scale(.94)">INICIAR SESIÓN</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ toggleMenu }}" style="cursor:pointer; display:flex; flex-direction:column; gap:5px; padding:8px">
+        <div style="width:26px; height:3px; background:#00f5ff; box-shadow:0 0 8px rgba(0,245,255,.8)"></div>
+        <div style="width:26px; height:3px; background:#00f5ff; box-shadow:0 0 8px rgba(0,245,255,.8)"></div>
+        <div style="width:26px; height:3px; background:#00f5ff; box-shadow:0 0 8px rgba(0,245,255,.8)"></div>
+      </div>
+    </sc-if>
+  </nav>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; top:0; right:0; bottom:0; width:78%; max-width:320px; z-index:70; background:#0c0c14; border-left:1px solid rgba(0,245,255,.3); box-shadow:-20px 0 60px rgba(0,0,0,.8); padding:22px; display:flex; flex-direction:column; gap:20px; animation:fadeIn .25s ease both">
+      <div onClick="{{ toggleMenu }}" style="align-self:flex-end; cursor:pointer; font-family:'Press Start 2P',monospace; font-size:14px; color:#ff006e">X</div>
+      <div onClick="{{ goLib }}" style="cursor:pointer; font-family:'Press Start 2P',monospace; font-size:11px; color:#00f5ff; padding:12px 0; border-bottom:1px solid rgba(0,245,255,.15)">BIBLIOTECA</div>
+      <div onClick="{{ goHall }}" style="cursor:pointer; font-family:'Press Start 2P',monospace; font-size:11px; color:#00f5ff; padding:12px 0; border-bottom:1px solid rgba(0,245,255,.15)">SALÓN DE LA FAMA</div>
+      <div onClick="{{ goAuth }}" style="cursor:pointer; margin-top:auto; text-align:center; padding:14px; font-family:'Press Start 2P',monospace; font-size:10px; color:#0a0a0f; background:#00f5ff">MI CUENTA</div>
+    </div>
+  </sc-if>
+
+  <div style="position:relative; z-index:10">
+
+    <sc-if value="{{ isLib }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:1240px; margin:0 auto; padding:56px 22px 90px; animation:fadeIn .3s ease both">
+        <div style="text-align:center; margin-bottom:44px">
+          <div style="display:flex; align-items:center; justify-content:center; gap:clamp(14px,3vw,32px); flex-wrap:wrap">
+            <img src="https://i.kym-cdn.com/photos/images/original/003/236/489/4b6.gif" alt="" style="flex:none; width:clamp(84px,14vw,150px); height:auto; border:1px solid rgba(0,245,255,.35); box-shadow:0 0 26px rgba(0,245,255,.35); image-rendering:pixelated">
+            <h1 style="margin:0; font-family:'Press Start 2P',monospace; font-size:clamp(26px,6vw,58px); line-height:1.3; color:#00f5ff; text-shadow:0 0 12px rgba(0,245,255,.9), 0 0 40px rgba(0,245,255,.5), 0 0 80px rgba(0,245,255,.25); animation:flicker 4.5s infinite steps(1)">ARCADE VAULT</h1>
+          </div>
+          <p style="margin:22px 0 0; font-family:'Press Start 2P',monospace; font-size:clamp(9px,1.6vw,13px); letter-spacing:2px; color:#f5ff00; text-shadow:0 0 14px rgba(245,255,0,.6)">INSERTA UNA MONEDA PARA JUGAR</p>
+          <p style="margin:16px 0 0; font-size:14px; color:rgba(215,215,224,.55); letter-spacing:1px">{{ gameCount }} cartuchos en la bóveda · puntuaciones guardadas en este navegador</p>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; margin-bottom:30px; padding:16px; background:rgba(12,12,20,.8); border:1px solid rgba(0,245,255,.22)">
+          <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="Buscar un juego por nombre..." style="flex:1 1 260px; min-width:0; padding:13px 15px; background:#08080d; border:1px solid rgba(0,245,255,.3); color:#00f5ff; font-size:14px; letter-spacing:1px; outline:none" style-focus="border-color:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.45)">
+          <div style="display:flex; flex-wrap:wrap; gap:8px">
+            <sc-for list="{{ categories }}" as="c" hint-placeholder-count="4">
+              <div onClick="{{ c.pick }}" style="cursor:pointer; padding:11px 14px; font-family:'Press Start 2P',monospace; font-size:9px; letter-spacing:1px; border:1px solid {{ c.border }}; color:{{ c.color }}; background:{{ c.bg }}" style-hover="border-color:#f5ff00; color:#f5ff00">{{ c.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:24px">
+          <sc-for list="{{ filteredGames }}" as="g" hint-placeholder-count="6">
+            <div style="position:relative; background:rgba(13,13,21,.9); border:1px solid rgba(0,245,255,.25); box-shadow:0 0 0 rgba(0,245,255,0); transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease" style-hover="transform:translateY(-8px) scale(1.02) rotate(-.7deg); border-color:#00f5ff; box-shadow:0 0 34px rgba(0,245,255,.4), 0 18px 40px rgba(0,0,0,.6)">
+              <div style="position:relative; height:158px; background:{{ g.grad }}; border-bottom:1px solid rgba(0,245,255,.2); overflow:hidden">
+                <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(45deg, rgba(10,10,15,.55) 0 7px, transparent 7px 14px)"></div>
+                <div style="position:absolute; inset:0; display:grid; place-items:center; font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:2px; color:rgba(10,10,15,.85); background:rgba(0,0,0,.1)">[ PORTADA · {{ g.slug }} ]</div>
+                <div style="position:absolute; top:10px; right:10px; padding:5px 9px; font-family:'Press Start 2P',monospace; font-size:8px; color:#0a0a0f; background:#f5ff00">{{ g.category }}</div>
+              </div>
+              <div style="padding:18px">
+                <h3 style="margin:0 0 10px; font-family:'Press Start 2P',monospace; font-size:13px; line-height:1.5; color:#fff; text-shadow:0 0 12px rgba(0,245,255,.55)">{{ g.title }}</h3>
+                <p style="margin:0 0 14px; font-size:13px; line-height:1.6; color:rgba(215,215,224,.65); min-height:42px">{{ g.blurb }}</p>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px dashed rgba(0,245,255,.18)">
+                  <div>
+                    <div style="font-size:10px; letter-spacing:1.5px; color:rgba(215,215,224,.45)">MEJOR PUNTUACIÓN</div>
+                    <div style="font-family:'Press Start 2P',monospace; font-size:12px; color:#ff006e; text-shadow:0 0 12px rgba(255,0,110,.7); margin-top:6px">{{ g.best }}</div>
+                  </div>
+                  <div onClick="{{ g.open }}" style="cursor:pointer; padding:12px 16px; font-family:'Press Start 2P',monospace; font-size:10px; color:#00f5ff; background:transparent; border:1px solid #00f5ff" style-hover="color:#0a0a0f; background:#00f5ff; box-shadow:0 0 24px rgba(0,245,255,.7)" style-active="transform:scale(.93)">JUGAR</div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:70px 20px; text-align:center; border:1px dashed rgba(255,0,110,.35)">
+            <div style="font-family:'Press Start 2P',monospace; font-size:14px; color:#ff006e">SIN RESULTADOS</div>
+            <p style="margin:16px 0 0; font-size:14px; color:rgba(215,215,224,.6)">Ningún cartucho coincide con esa búsqueda.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1180px; margin:0 auto; padding:48px 22px 90px; animation:fadeIn .3s ease both">
+        <div onClick="{{ goLib }}" style="display:inline-block; cursor:pointer; margin-bottom:28px; padding:11px 15px; font-family:'Press Start 2P',monospace; font-size:9px; color:#d7d7e0; border:1px solid rgba(215,215,224,.3)" style-hover="color:#00f5ff; border-color:#00f5ff" style-active="transform:scale(.94)">◄ VOLVER AL VAULT</div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:28px; align-items:start">
+          <div>
+            <div style="height:220px; background:{{ current.grad }}; border:1px solid rgba(0,245,255,.3); position:relative; overflow:hidden; margin-bottom:26px">
+              <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(45deg, rgba(10,10,15,.55) 0 7px, transparent 7px 14px)"></div>
+              <div style="position:absolute; inset:0; display:grid; place-items:center; font-size:11px; letter-spacing:2px; color:rgba(10,10,15,.85)">[ ARTE DE PORTADA ]</div>
+            </div>
+            <h1 style="margin:0; font-family:'Press Start 2P',monospace; font-size:clamp(20px,4vw,34px); line-height:1.4; color:#f5ff00; text-shadow:0 0 14px rgba(245,255,0,.8), 0 0 44px rgba(245,255,0,.35)">{{ current.title }}</h1>
+            <div style="display:flex; gap:10px; margin:18px 0 20px; flex-wrap:wrap">
+              <div style="padding:6px 11px; font-size:11px; letter-spacing:1.5px; border:1px solid rgba(0,245,255,.35); color:#00f5ff">{{ current.category }}</div>
+              <div style="padding:6px 11px; font-size:11px; letter-spacing:1.5px; border:1px solid rgba(255,0,110,.35); color:#ff006e">{{ current.year }}</div>
+              <div style="padding:6px 11px; font-size:11px; letter-spacing:1.5px; border:1px solid rgba(245,255,0,.35); color:#f5ff00">1 JUGADOR</div>
+            </div>
+            <p style="margin:0 0 30px; font-size:15px; line-height:1.9; color:rgba(215,215,224,.78); max-width:56ch; text-wrap:pretty">{{ current.long }}</p>
+            <div style="display:flex; flex-wrap:wrap; gap:14px">
+              <div onClick="{{ play }}" style="cursor:pointer; padding:19px 30px; font-family:'Press Start 2P',monospace; font-size:13px; color:#0a0a0f; background:#ff006e; animation:pulseGlow 1.8s ease-in-out infinite" style-hover="background:#f5ff00" style-active="transform:scale(.95)">JUGAR AHORA</div>
+              <div onClick="{{ goLib }}" style="cursor:pointer; padding:19px 30px; font-family:'Press Start 2P',monospace; font-size:13px; color:#00f5ff; border:1px solid #00f5ff" style-hover="color:#0a0a0f; background:#00f5ff" style-active="transform:scale(.95)">VOLVER AL VAULT</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(12,12,20,.85); border:1px solid rgba(0,245,255,.25); box-shadow:inset 0 0 40px rgba(0,245,255,.06)">
+            <div style="padding:16px 18px; border-bottom:1px solid rgba(0,245,255,.2); font-family:'Press Start 2P',monospace; font-size:10px; color:#00f5ff; text-shadow:0 0 12px rgba(0,245,255,.6)">MEJORES PUNTUACIONES</div>
+            <sc-for list="{{ detailRows }}" as="r" hint-placeholder-count="10">
+              <div style="display:grid; grid-template-columns:34px 1fr auto; gap:12px; align-items:center; padding:13px 18px; border-bottom:1px solid rgba(255,255,255,.05); background:{{ r.rowBg }}; animation:rowIn .45s ease both; animation-delay:{{ r.delay }}">
+                <div style="font-family:'Press Start 2P',monospace; font-size:10px; color:{{ r.medal }}">{{ r.rank }}</div>
+                <div style="font-size:13px; letter-spacing:1px; color:#d7d7e0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ r.player }}</div>
+                <div style="text-align:right">
+                  <div style="font-family:'Press Start 2P',monospace; font-size:11px; color:{{ r.medal }}">{{ r.score }}</div>
+                  <div style="font-size:10px; color:rgba(215,215,224,.35); margin-top:4px">{{ r.date }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPlay }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1000px; margin:0 auto; padding:34px 22px 80px; animation:fadeIn .25s ease both">
+        <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; padding:16px 20px; background:rgba(12,12,20,.9); border:1px solid rgba(0,245,255,.3); box-shadow:0 0 26px rgba(0,245,255,.12)">
+          <div style="display:flex; flex-wrap:wrap; gap:26px">
+            <div>
+              <div style="font-size:10px; letter-spacing:1.5px; color:rgba(215,215,224,.45)">PUNTUACIÓN</div>
+              <div style="font-family:'Press Start 2P',monospace; font-size:15px; color:#00f5ff; margin-top:7px; text-shadow:0 0 12px rgba(0,245,255,.7)">{{ score }}</div>
+            </div>
+            <div>
+              <div style="font-size:10px; letter-spacing:1.5px; color:rgba(215,215,224,.45)">VIDAS</div>
+              <div style="font-family:'Press Start 2P',monospace; font-size:15px; color:#ff006e; margin-top:7px; text-shadow:0 0 12px rgba(255,0,110,.7)">{{ livesText }}</div>
+            </div>
+            <div>
+              <div style="font-size:10px; letter-spacing:1.5px; color:rgba(215,215,224,.45)">NIVEL</div>
+              <div style="font-family:'Press Start 2P',monospace; font-size:15px; color:#f5ff00; margin-top:7px; text-shadow:0 0 12px rgba(245,255,0,.7)">{{ level }}</div>
+            </div>
+            <div>
+              <div style="font-size:10px; letter-spacing:1.5px; color:rgba(215,215,224,.45)">JUGADOR</div>
+              <div style="font-size:14px; letter-spacing:1px; color:#d7d7e0; margin-top:9px">{{ userName }}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px">
+            <div onClick="{{ togglePause }}" style="cursor:pointer; padding:12px 16px; font-family:'Press Start 2P',monospace; font-size:10px; color:#f5ff00; border:1px solid #f5ff00" style-hover="color:#0a0a0f; background:#f5ff00" style-active="transform:scale(.93)">{{ pauseLabel }}</div>
+            <div onClick="{{ quit }}" style="cursor:pointer; padding:12px 16px; font-family:'Press Start 2P',monospace; font-size:10px; color:#ff006e; border:1px solid #ff006e" style-hover="color:#0a0a0f; background:#ff006e" style-active="transform:scale(.93)">SALIR</div>
+          </div>
+        </div>
+
+        <div style="margin-top:26px; padding:22px; background:linear-gradient(#1a1a24,#0d0d14); border:1px solid rgba(0,245,255,.2); border-radius:26px; box-shadow:0 0 60px rgba(0,245,255,.12), inset 0 2px 0 rgba(255,255,255,.06)">
+          <div style="position:relative; border-radius:18px; overflow:hidden; background:#05050a; box-shadow:inset 0 0 70px rgba(0,245,255,.18), inset 0 0 0 2px rgba(0,245,255,.25)">
+            <sc-if value="{{ playable }}" hint-placeholder-val="{{ true }}">
+              <canvas id="av-canvas" width="480" height="360" style="display:block; width:100%; height:auto; image-rendering:pixelated; transform:{{ curveTransform }}"></canvas>
+            </sc-if>
+            <sc-if value="{{ notPlayable }}" hint-placeholder-val="{{ false }}">
+              <div style="aspect-ratio:4/3; display:grid; place-items:center; text-align:center; padding:30px">
+                <div>
+                  <div style="width:44px; height:44px; margin:0 auto 22px; border:4px solid rgba(0,245,255,.2); border-top-color:#00f5ff; animation:spin .9s linear infinite"></div>
+                  <div style="font-family:'Press Start 2P',monospace; font-size:11px; color:#00f5ff; line-height:1.9">CARGANDO CARTUCHO</div>
+                  <p style="margin:18px auto 0; max-width:44ch; font-size:13px; line-height:1.8; color:rgba(215,215,224,.5)">Este contenedor es un iframe aislado: aquí se monta el archivo HTML del juego externo. Sustituye el marcador por la ruta del cartucho.</p>
+                </div>
+              </div>
+            </sc-if>
+            <div style="position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px)"></div>
+            <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 90px rgba(0,0,0,.85)"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:14px; margin-top:16px; padding:0 6px; font-size:11px; letter-spacing:1.5px; color:rgba(215,215,224,.4)">
+            <div>{{ current.controls }}</div>
+            <div>ESPACIO · PAUSA</div>
+          </div>
+        </div>
+      </div>
+
+      <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; inset:0; z-index:80; display:grid; place-items:center; background:rgba(5,5,10,.82); animation:fadeIn .2s ease both">
+          <div style="font-family:'Press Start 2P',monospace; font-size:clamp(18px,4vw,34px); color:#f5ff00; text-shadow:0 0 26px rgba(245,255,0,.8)">PAUSA</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ gameOver }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; inset:0; z-index:90; display:grid; place-items:center; padding:22px; background:rgba(5,5,10,.9); animation:fadeIn .25s ease both">
+          <div style="width:100%; max-width:460px; background:#0c0c14; border:1px solid #ff006e; box-shadow:0 0 60px rgba(255,0,110,.35); padding:34px; text-align:center">
+            <div style="font-family:'Press Start 2P',monospace; font-size:clamp(16px,4vw,24px); color:#ff006e; text-shadow:0 0 22px rgba(255,0,110,.8)">FIN DEL JUEGO</div>
+            <div style="margin:26px 0 6px; font-size:11px; letter-spacing:2px; color:rgba(215,215,224,.5)">PUNTUACIÓN FINAL</div>
+            <div style="font-family:'Press Start 2P',monospace; font-size:30px; color:#f5ff00; text-shadow:0 0 24px rgba(245,255,0,.6)">{{ score }}</div>
+
+            <sc-if value="{{ canSubmit }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:28px; display:flex; flex-direction:column; gap:12px">
+                <input value="{{ nameInput }}" onChange="{{ setNameInput }}" placeholder="Tu nombre o iniciales" style="padding:14px; background:#08080d; border:1px solid rgba(0,245,255,.3); color:#00f5ff; font-size:14px; letter-spacing:2px; text-align:center; outline:none" style-focus="border-color:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.45)">
+                <div onClick="{{ saveScore }}" style="cursor:pointer; padding:16px; font-family:'Press Start 2P',monospace; font-size:11px; color:#0a0a0f; background:#00f5ff; box-shadow:0 0 22px rgba(0,245,255,.45)" style-hover="background:#f5ff00" style-active="transform:scale(.95)">GUARDAR PUNTUACIÓN</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ savedShown }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:26px; padding:14px; border:1px dashed rgba(0,245,255,.4); font-family:'Press Start 2P',monospace; font-size:10px; color:#00f5ff; letter-spacing:1px; min-height:16px">{{ typed }}<span style="color:#f5ff00">_</span></div>
+            </sc-if>
+            <sc-if value="{{ guestNotice }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:22px 0 0; font-size:12px; line-height:1.7; color:rgba(215,215,224,.45)">Estás jugando como invitado: la puntuación se guarda solo en este navegador.</p>
+            </sc-if>
+
+            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:26px">
+              <div onClick="{{ play }}" style="flex:1 1 150px; cursor:pointer; padding:15px; font-family:'Press Start 2P',monospace; font-size:10px; color:#f5ff00; border:1px solid #f5ff00" style-hover="color:#0a0a0f; background:#f5ff00" style-active="transform:scale(.95)">JUGAR DE NUEVO</div>
+              <div onClick="{{ goLib }}" style="flex:1 1 150px; cursor:pointer; padding:15px; font-family:'Press Start 2P',monospace; font-size:10px; color:#d7d7e0; border:1px solid rgba(215,215,224,.35)" style-hover="color:#00f5ff; border-color:#00f5ff" style-active="transform:scale(.95)">VOLVER AL VAULT</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:82vh; display:grid; place-items:center; padding:52px 22px; animation:fadeIn .3s ease both">
+        <div style="width:100%; max-width:430px; background:rgba(12,12,20,.9); border:1px solid rgba(0,245,255,.28); box-shadow:0 0 60px rgba(0,245,255,.14); padding:34px">
+          <div style="text-align:center; font-family:'Press Start 2P',monospace; font-size:15px; color:#00f5ff; text-shadow:0 0 14px rgba(0,245,255,.85); margin-bottom:30px">ARCADE<span style="color:#ff006e"> VAULT</span></div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:26px; border:1px solid rgba(0,245,255,.25)">
+            <div onClick="{{ tabLogin }}" style="cursor:pointer; padding:14px 8px; text-align:center; font-family:'Press Start 2P',monospace; font-size:9px; color:{{ loginTabColor }}; background:{{ loginTabBg }}">INICIAR SESIÓN</div>
+            <div onClick="{{ tabRegister }}" style="cursor:pointer; padding:14px 8px; text-align:center; font-family:'Press Start 2P',monospace; font-size:9px; color:{{ regTabColor }}; background:{{ regTabBg }}">CREAR CUENTA</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:16px">
+            <div>
+              <div style="font-size:11px; letter-spacing:2px; color:rgba(215,215,224,.5); margin-bottom:8px">USUARIO</div>
+              <input value="{{ authUser }}" onChange="{{ setAuthUser }}" placeholder="jugador_01" style="width:100%; padding:14px; background:#08080d; border:1px solid rgba(0,245,255,.3); color:#00f5ff; font-size:14px; outline:none" style-focus="border-color:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.5)">
+            </div>
+            <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="font-size:11px; letter-spacing:2px; color:rgba(215,215,224,.5); margin-bottom:8px">CORREO ELECTRÓNICO</div>
+                <input placeholder="tu@correo.com" style="width:100%; padding:14px; background:#08080d; border:1px solid rgba(0,245,255,.3); color:#00f5ff; font-size:14px; outline:none" style-focus="border-color:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.5)">
+              </div>
+            </sc-if>
+            <div>
+              <div style="font-size:11px; letter-spacing:2px; color:rgba(215,215,224,.5); margin-bottom:8px">CONTRASEÑA</div>
+              <input type="password" placeholder="••••••••" style="width:100%; padding:14px; background:#08080d; border:1px solid rgba(0,245,255,.3); color:#00f5ff; font-size:14px; outline:none" style-focus="border-color:#00f5ff; box-shadow:0 0 18px rgba(0,245,255,.5)">
+            </div>
+            <div onClick="{{ submitAuth }}" style="cursor:pointer; margin-top:6px; padding:17px; text-align:center; font-family:'Press Start 2P',monospace; font-size:11px; color:#0a0a0f; background:#00f5ff; box-shadow:0 0 24px rgba(0,245,255,.45)" style-hover="background:#f5ff00" style-active="transform:scale(.96)">{{ authCta }}</div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; margin:26px 0">
+            <div style="flex:1; height:1px; background:rgba(255,255,255,.1)"></div>
+            <div style="font-size:11px; letter-spacing:2px; color:rgba(215,215,224,.35)">O CONTINÚA CON</div>
+            <div style="flex:1; height:1px; background:rgba(255,255,255,.1)"></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div onClick="{{ submitAuth }}" style="cursor:pointer; padding:14px; text-align:center; font-size:12px; letter-spacing:1.5px; color:#d7d7e0; border:1px solid rgba(215,215,224,.25)" style-hover="border-color:#00f5ff; color:#00f5ff" style-active="transform:scale(.96)">Google</div>
+            <div onClick="{{ submitAuth }}" style="cursor:pointer; padding:14px; text-align:center; font-size:12px; letter-spacing:1.5px; color:#d7d7e0; border:1px solid rgba(215,215,224,.25)" style-hover="border-color:#00f5ff; color:#00f5ff" style-active="transform:scale(.96)">GitHub</div>
+          </div>
+
+          <div onClick="{{ guestLogin }}" style="cursor:pointer; margin-top:22px; padding:14px; text-align:center; font-family:'Press Start 2P',monospace; font-size:9px; color:#f5ff00; border:1px dashed rgba(245,255,0,.45)" style-hover="background:rgba(245,255,0,.08)" style-active="transform:scale(.96)">JUGAR COMO INVITADO</div>
+          <p style="margin:14px 0 0; text-align:center; font-size:11px; line-height:1.7; color:rgba(215,215,224,.35)">Sin cuenta, las puntuaciones no se guardan en el servidor. Aquí conectaría la API de autenticación (REST o Supabase).</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHall }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1000px; margin:0 auto; padding:56px 22px 90px; animation:fadeIn .3s ease both">
+        <div style="text-align:center; margin-bottom:40px">
+          <h1 style="margin:0; font-family:'Press Start 2P',monospace; font-size:clamp(20px,4.6vw,40px); line-height:1.4; color:#f5ff00; text-shadow:0 0 16px rgba(245,255,0,.8), 0 0 50px rgba(245,255,0,.3)">SALÓN DE LA FAMA</h1>
+          <p style="margin:18px 0 0; font-size:14px; letter-spacing:1px; color:rgba(215,215,224,.55)">Las diez mejores marcas de cada cartucho de la bóveda.</p>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:30px">
+          <sc-for list="{{ hallTabs }}" as="t" hint-placeholder-count="6">
+            <div onClick="{{ t.pick }}" style="cursor:pointer; padding:12px 14px; font-family:'Press Start 2P',monospace; font-size:9px; letter-spacing:1px; color:{{ t.color }}; background:{{ t.bg }}; border:1px solid {{ t.border }}" style-hover="border-color:#f5ff00; color:#f5ff00">{{ t.label }}</div>
+          </sc-for>
+        </div>
+
+        <div style="background:rgba(12,12,20,.85); border:1px solid rgba(0,245,255,.25); box-shadow:inset 0 0 50px rgba(0,245,255,.05)">
+          <div style="display:grid; grid-template-columns:70px 1fr 130px 120px; gap:10px; padding:16px 20px; border-bottom:1px solid rgba(0,245,255,.25); font-family:'Press Start 2P',monospace; font-size:9px; letter-spacing:1px; color:#00f5ff">
+            <div>RANGO</div>
+            <div>JUGADOR</div>
+            <div style="text-align:right">PUNTUACIÓN</div>
+            <div style="text-align:right">FECHA</div>
+          </div>
+          <sc-for list="{{ hallRows }}" as="r" hint-placeholder-count="10">
+            <div style="display:grid; grid-template-columns:70px 1fr 130px 120px; gap:10px; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.05); background:{{ r.rowBg }}; animation:rowIn .5s ease both; animation-delay:{{ r.delay }}">
+              <div style="font-family:'Press Start 2P',monospace; font-size:12px; color:{{ r.medal }}; text-shadow:{{ r.glow }}">{{ r.rank }}</div>
+              <div style="display:flex; align-items:center; gap:10px; min-width:0">
+                <div style="font-size:14px; letter-spacing:1px; color:#d7d7e0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ r.player }}</div>
+                <sc-if value="{{ r.isMine }}" hint-placeholder-val="{{ false }}">
+                  <div style="flex:none; padding:4px 8px; font-family:'Press Start 2P',monospace; font-size:7px; color:#0a0a0f; background:#f5ff00">TU MEJOR MARCA</div>
+                </sc-if>
+              </div>
+              <div style="text-align:right; font-family:'Press Start 2P',monospace; font-size:11px; color:{{ r.medal }}">{{ r.score }}</div>
+              <div style="text-align:right; font-size:12px; color:rgba(215,215,224,.4)">{{ r.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:22px 0 0; font-size:12px; line-height:1.8; color:rgba(215,215,224,.35)">Datos leídos de localStorage. En producción, esta tabla se alimentaría del endpoint <span style="color:#00f5ff">GET /api/scores/:juego</span>.</p>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Pantalla&quot;},&quot;crtCurvature&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Pantalla&quot;},&quot;gameSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:110,&quot;min&quot;:60,&quot;max&quot;:180,&quot;step&quot;:10,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Juego&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.games = [
+      { id: 'serpiente', title: 'NEÓN SERPIENTE', slug: 'SERPIENTE', category: 'CLÁSICOS', year: '1978', playable: true,
+        blurb: 'Crece sin morder tu propia cola.',
+        long: 'Guías una línea de luz que no deja de crecer por una rejilla cerrada. Cada fruta que devoras alarga el cuerpo y acelera el ritmo. El único enemigo es tu propio rastro, y los muros no perdonan.',
+        controls: 'FLECHAS / WASD · MOVER',
+        grad: 'linear-gradient(135deg,#00f5ff,#0066a8)' },
+      { id: 'bloques', title: 'BLOQUES CAÍDOS', slug: 'BLOQUES', category: 'PUZZLE', year: '1984', playable: false,
+        blurb: 'Encaja las piezas antes de que la pila suba.',
+        long: 'Siete figuras caen sin descanso desde el techo del pozo. Rótalas y encájalas para completar líneas limpias antes de que la pila alcance el borde superior. Cada nivel las suelta más rápido.',
+        controls: 'FLECHAS · ROTAR Y CAER',
+        grad: 'linear-gradient(135deg,#ff006e,#5a0030)' },
+      { id: 'invasores', title: 'INVASORES', slug: 'INVASORES', category: 'DISPAROS', year: '1980', playable: false,
+        blurb: 'Defiende la base de las oleadas del cielo.',
+        long: 'Formaciones enemigas descienden fila por fila mientras tu cañón se desliza tras cuatro búnkeres que se deshacen a cada impacto. Vacía la pantalla antes de que toquen el suelo.',
+        controls: 'FLECHAS · MOVER · ESPACIO · DISPARAR',
+        grad: 'linear-gradient(135deg,#f5ff00,#8a7a00)' },
+      { id: 'asteroides', title: 'ASTEROIDES', slug: 'ASTEROIDES', category: 'DISPAROS', year: '1981', playable: false,
+        blurb: 'Pulveriza rocas a la deriva en gravedad cero.',
+        long: 'Tu nave gira sobre su eje en el vacío, sin freno y con inercia real. Cada roca que revientas se parte en fragmentos más rápidos y pequeños. Sobrevive al campo entero para pasar de oleada.',
+        controls: 'FLECHAS · GIRAR · ESPACIO · DISPARAR',
+        grad: 'linear-gradient(135deg,#7b5cff,#1b1046)' },
+      { id: 'paleta', title: 'PALETA Y MURO', slug: 'PALETA', category: 'CLÁSICOS', year: '1976', playable: false,
+        blurb: 'Rompe cada ladrillo con un solo rebote.',
+        long: 'Una paleta, una bola y un muro de ladrillos de colores. El ángulo de salida depende de dónde golpeas, así que cada rebote es una decisión. Las filas superiores valen más y devuelven la bola más rápido.',
+        controls: 'FLECHAS · MOVER LA PALETA',
+        grad: 'linear-gradient(135deg,#00ffa3,#00553a)' },
+      { id: 'laberinto', title: 'LABERINTO VELOZ', slug: 'LABERINTO', category: 'LABERINTO', year: '1982', playable: false,
+        blurb: 'Devora puntos y esquiva a los guardianes.',
+        long: 'Recorre un laberinto sembrado de puntos con cuatro guardianes pisándote los talones. Las cápsulas de energía invierten la persecución durante unos segundos: el momento de cobrar deudas.',
+        controls: 'FLECHAS · MOVER',
+        grad: 'linear-gradient(135deg,#ff8a00,#5e2b00)' }
+    ];
+    this.cats = ['TODOS', 'CLÁSICOS', 'PUZZLE', 'DISPAROS', 'LABERINTO'];
+    this.state = {
+      route: 'lib', gameId: null, hallId: 'serpiente', query: '', cat: 'TODOS',
+      user: null, authTab: 'login', authUser: '', menuOpen: false,
+      isMobile: false, score: 0, lives: 3, level: 1, paused: false,
+      gameOver: false, saved: false, typed: '', nameInput: '', scores: {}, tick: 0
+    };
+  }
+
+  // ---- scores (localStorage; a real backend would replace this layer) ----
+  get storeKey() { return 'arcadeVault.scores.v1'; }
+  seedFor(id) {
+    const names = ['NEO', 'PACO', 'LUCIA', 'R2D9', 'SOFIA', 'ZORRO', 'MAXI', 'IRIS', 'TITO', 'ELENA', 'VIPER', 'CHISPA'];
+    let s = 0; for (let i = 0; i < id.length; i++) s = (s * 31 + id.charCodeAt(i)) % 99991;
+    const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+    const out = [];
+    let v = 9000 + Math.floor(rnd() * 8000);
+    for (let i = 0; i < 10; i++) {
+      out.push({
+        player: names[Math.floor(rnd() * names.length)] + (i % 3 === 0 ? '' : '_' + (10 + Math.floor(rnd() * 89))),
+        score: v,
+        date: '2026-0' + (1 + Math.floor(rnd() * 8)) + '-' + String(1 + Math.floor(rnd() * 28)).padStart(2, '0')
+      });
+      v = Math.max(120, v - Math.floor(400 + rnd() * 1400));
+    }
+    return out;
+  }
+  loadScores() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(this.storeKey) || '{}'); } catch (e) { saved = {}; }
+    const all = {};
+    this.games.forEach(g => {
+      all[g.id] = this.seedFor(g.id).concat(saved[g.id] || []).sort((a, b) => b.score - a.score);
+    });
+    this.userScores = saved;
+    this.setState({ scores: all });
+  }
+  pushScore(id, entry) {
+    const saved = this.userScores || {};
+    saved[id] = (saved[id] || []).concat([entry]);
+    this.userScores = saved;
+    try { localStorage.setItem(this.storeKey, JSON.stringify(saved)); } catch (e) {}
+    const all = Object.assign({}, this.state.scores);
+    all[id] = (all[id] || []).concat([entry]).sort((a, b) => b.score - a.score);
+    this.setState({ scores: all });
+  }
+
+  componentDidMount() {
+    this.loadScores();
+    this.onResize = () => this.setState({ isMobile: window.innerWidth < 760 });
+    this.onResize();
+    window.addEventListener('resize', this.onResize);
+    this.onKey = e => {
+      if (this.state.route !== 'play') return;
+      const k = e.key;
+      if (k === ' ') { e.preventDefault(); this.togglePause(); return; }
+      const map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+      const m = map[k] || map[String(k).toLowerCase()];
+      if (!m || !this.g) return;
+      e.preventDefault();
+      const d = this.g.dir;
+      if (m[0] === -d.x && m[1] === -d.y) return;
+      this.g.next = { x: m[0], y: m[1] };
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('keydown', this.onKey);
+    this.stopGame();
+  }
+  componentDidUpdate() {
+    const r = this.state.route;
+    if (r !== 'play' && this._prevRoute === 'play') this.stopGame();
+    this._prevRoute = r;
+  }
+  canvas() { return document.getElementById('av-canvas'); }
+
+  // ---- demo game: neon snake on canvas ----
+  get cell() { return 20; }
+  get cols() { return 24; }
+  get rows() { return 18; }
+  speed() {
+    const base = this.props.gameSpeed ?? 110;
+    return Math.max(55, base - (this.state.level - 1) * 8);
+  }
+  resetSnake() {
+    this.g = { snake: [{ x: 8, y: 9 }, { x: 7, y: 9 }, { x: 6, y: 9 }], dir: { x: 1, y: 0 }, next: null, food: { x: 17, y: 9 }, eaten: 0 };
+  }
+  startGame() {
+    this.resetSnake();
+    this.steps = 0;
+    this._runId = (this._runId || 0) + 1;
+    const id = this._runId;
+    clearTimeout(this._timer);
+    const tick = () => {
+      if (id !== this._runId) return;
+      try { this.step(); } catch (e) { console.error('step', e); }
+      this._timer = setTimeout(tick, this.speed());
+    };
+    this.draw();
+    this._timer = setTimeout(tick, this.speed());
+  }
+  stopGame() { this._runId = (this._runId || 0) + 1; clearTimeout(this._timer); this._timer = null; }
+  placeFood() {
+    const occupied = new Set(this.g.snake.map(p => p.x + ',' + p.y));
+    let p;
+    do { p = { x: Math.floor(Math.random() * this.cols), y: Math.floor(Math.random() * this.rows) }; }
+    while (occupied.has(p.x + ',' + p.y));
+    this.g.food = p;
+  }
+  step() {
+    if (this.state.paused || this.state.gameOver || !this.g) return;
+    this.steps = (this.steps || 0) + 1;
+    const g = this.g;
+    if (g.next) { g.dir = g.next; g.next = null; }
+    const head = { x: g.snake[0].x + g.dir.x, y: g.snake[0].y + g.dir.y };
+    const hitWall = head.x < 0 || head.y < 0 || head.x >= this.cols || head.y >= this.rows;
+    const hitSelf = g.snake.some(p => p.x === head.x && p.y === head.y);
+    if (hitWall || hitSelf) return this.die();
+    g.snake.unshift(head);
+    if (head.x === g.food.x && head.y === g.food.y) {
+      g.eaten++;
+      this.placeFood();
+      const nextLevel = 1 + Math.floor(g.eaten / 5);
+      this.setState(s => ({ score: s.score + 10 * s.level, level: nextLevel }));
+    } else {
+      g.snake.pop();
+    }
+    this.draw();
+  }
+  die() {
+    const lives = this.state.lives - 1;
+    if (lives > 0) {
+      this.setState({ lives });
+      this.resetSnake();
+      this.draw();
+    } else {
+      this.stopGame();
+      this.setState({ lives: 0, gameOver: true, saved: false, typed: '' });
+    }
+  }
+  draw() {
+    const c = this.canvas();
+    if (!c || !this.g) return;
+    const ctx = c.getContext('2d');
+    const cs = this.cell;
+    ctx.fillStyle = '#05050a';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.strokeStyle = 'rgba(0,245,255,.07)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= this.cols; x++) { ctx.beginPath(); ctx.moveTo(x * cs, 0); ctx.lineTo(x * cs, c.height); ctx.stroke(); }
+    for (let y = 0; y <= this.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * cs); ctx.lineTo(c.width, y * cs); ctx.stroke(); }
+    const f = this.g.food;
+    ctx.shadowBlur = 18; ctx.shadowColor = '#ff006e'; ctx.fillStyle = '#ff006e';
+    ctx.fillRect(f.x * cs + 5, f.y * cs + 5, cs - 10, cs - 10);
+    this.g.snake.forEach((p, i) => {
+      ctx.shadowColor = i === 0 ? '#f5ff00' : '#00f5ff';
+      ctx.shadowBlur = i === 0 ? 22 : 12;
+      ctx.fillStyle = i === 0 ? '#f5ff00' : '#00f5ff';
+      ctx.globalAlpha = i === 0 ? 1 : Math.max(.35, 1 - i * 0.03);
+      ctx.fillRect(p.x * cs + 2, p.y * cs + 2, cs - 4, cs - 4);
+    });
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  }
+
+  fmt(n) { return Number(n).toLocaleString('es-ES'); }
+
+  rowsFor(id, withMine) {
+    const list = (this.state.scores[id] || []).slice(0, 10);
+    const me = this.state.user && !this.state.user.guest ? this.state.user.name : null;
+    const medals = ['#f5ff00', '#e6e6f0', '#ff8a00'];
+    const glows = ['0 0 18px rgba(245,255,0,.9)', '0 0 18px rgba(230,230,240,.7)', '0 0 18px rgba(255,138,0,.8)'];
+    return list.map((r, i) => {
+      const mine = withMine && me && r.player === me;
+      return {
+        rank: String(i + 1).padStart(2, '0'),
+        player: r.player,
+        score: this.fmt(r.score),
+        date: r.date,
+        medal: i < 3 ? medals[i] : '#d7d7e0',
+        glow: i < 3 ? glows[i] : 'none',
+        rowBg: mine ? 'rgba(245,255,0,.10)' : (i < 3 ? 'rgba(0,245,255,.04)' : 'transparent'),
+        isMine: !!mine,
+        delay: (i * 55) + 'ms'
+      };
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const current = this.games.find(g => g.id === s.gameId) || this.games[0];
+    const q = s.query.trim().toLowerCase();
+    const filtered = this.games.filter(g =>
+      (s.cat === 'TODOS' || g.category === s.cat) &&
+      (!q || g.title.toLowerCase().includes(q) || g.blurb.toLowerCase().includes(q) || g.category.toLowerCase().includes(q))
+    );
+    const best = id => {
+      const l = this.state.scores[id];
+      return l && l.length ? this.fmt(l[0].score) : '—';
+    };
+    return {
+      scanlines: this.props.scanlines ?? true,
+      curveTransform: (this.props.crtCurvature ?? true) ? 'scale(1.012) perspective(900px) rotateX(.6deg)' : 'none',
+
+      isLib: s.route === 'lib', isDetail: s.route === 'detail', isPlay: s.route === 'play',
+      isAuth: s.route === 'auth', isHall: s.route === 'hall',
+      isDesktop: !s.isMobile, isMobile: s.isMobile, menuOpen: s.menuOpen,
+      loggedIn: !!s.user, loggedOut: !s.user,
+      userName: s.user ? s.user.name : 'INVITADO',
+      userInitial: s.user ? s.user.name.charAt(0).toUpperCase() : 'I',
+      gameCount: this.games.length,
+
+      query: s.query,
+      setQuery: e => this.setState({ query: e.target.value }),
+      categories: this.cats.map(c => ({
+        label: c, pick: () => this.setState({ cat: c }),
+        border: s.cat === c ? '#00f5ff' : 'rgba(0,245,255,.25)',
+        color: s.cat === c ? '#0a0a0f' : '#d7d7e0',
+        bg: s.cat === c ? '#00f5ff' : 'transparent'
+      })),
+      filteredGames: filtered.map(g => Object.assign({}, g, {
+        best: best(g.id),
+        open: () => this.setState({ route: 'detail', gameId: g.id, menuOpen: false })
+      })),
+      noResults: filtered.length === 0,
+
+      current: current,
+      detailRows: this.rowsFor(current.id, false),
+
+      score: this.fmt(s.score), level: String(s.level).padStart(2, '0'),
+      livesText: '♥'.repeat(Math.max(0, s.lives)) || '—',
+      paused: s.paused, pauseLabel: s.paused ? 'SEGUIR' : 'PAUSA',
+      gameOver: s.gameOver, playable: current.playable, notPlayable: !current.playable,
+      canSubmit: s.gameOver && !s.saved, savedShown: s.saved, typed: s.typed,
+      guestNotice: s.gameOver && (!s.user || s.user.guest),
+      nameInput: s.nameInput,
+      setNameInput: e => this.setState({ nameInput: e.target.value }),
+      saveScore: () => {
+        const name = (s.nameInput || (s.user ? s.user.name : '') || 'INVITADO').toUpperCase().slice(0, 14);
+        const d = new Date();
+        this.pushScore(current.id, { player: name, score: s.score, date: d.toISOString().slice(0, 10) });
+        this.setState({ saved: true, typed: '' });
+        const msg = 'PUNTUACIÓN GUARDADA';
+        let i = 0;
+        clearInterval(this.typer);
+        this.typer = setInterval(() => {
+          i++;
+          this.setState({ typed: msg.slice(0, i) });
+          if (i >= msg.length) clearInterval(this.typer);
+        }, 60);
+      },
+      togglePause: () => this.togglePause(),
+      quit: () => this.setState({ route: 'lib', gameOver: false, paused: false }),
+      play: () => {
+        this.stopGame();
+        this.setState({ route: 'play', gameId: current.id, score: 0, lives: 3, level: 1, gameOver: false, paused: false, saved: false, typed: '', menuOpen: false }, () => {
+          if (current.playable) this.startGame();
+        });
+      },
+
+      goLib: () => this.setState({ route: 'lib', menuOpen: false, gameOver: false }),
+      goHall: () => this.setState({ route: 'hall', menuOpen: false }),
+      goAuth: () => this.setState({ route: 'auth', menuOpen: false }),
+      logout: () => this.setState({ user: null }),
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
+
+      isRegister: s.authTab === 'register',
+      authCta: s.authTab === 'register' ? 'CREAR CUENTA' : 'ENTRAR',
+      loginTabColor: s.authTab === 'login' ? '#0a0a0f' : '#d7d7e0',
+      loginTabBg: s.authTab === 'login' ? '#00f5ff' : 'transparent',
+      regTabColor: s.authTab === 'register' ? '#0a0a0f' : '#d7d7e0',
+      regTabBg: s.authTab === 'register' ? '#00f5ff' : 'transparent',
+      tabLogin: () => this.setState({ authTab: 'login' }),
+      tabRegister: () => this.setState({ authTab: 'register' }),
+      authUser: s.authUser,
+      setAuthUser: e => this.setState({ authUser: e.target.value }),
+      submitAuth: () => this.setState({ user: { name: (s.authUser || 'JUGADOR_01').toUpperCase(), guest: false }, route: 'lib' }),
+      guestLogin: () => this.setState({ user: { name: 'INVITADO', guest: true }, route: 'lib' }),
+
+      hallTabs: this.games.map(g => ({
+        label: g.slug, pick: () => this.setState({ hallId: g.id }),
+        color: s.hallId === g.id ? '#0a0a0f' : '#d7d7e0',
+        bg: s.hallId === g.id ? '#00f5ff' : 'transparent',
+        border: s.hallId === g.id ? '#00f5ff' : 'rgba(0,245,255,.25)'
+      })),
+      hallRows: this.rowsFor(s.hallId, true)
+    };
+  }
+
+  togglePause() { this.setState(s => ({ paused: !s.paused })); }
+}
+</script>
+</body>
+</html>
