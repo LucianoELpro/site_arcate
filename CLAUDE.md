@@ -16,6 +16,9 @@ Arcade Vault is a platform for playing games online and competing for the highes
 - `npm run lint` — ESLint via the flat config in `eslint.config.mjs`
 
 No test runner is configured yet.
+## Skill
+Usa siempre /frontend-design para diseñar la interfaz de usuario
+
 
 ## Architecture
 

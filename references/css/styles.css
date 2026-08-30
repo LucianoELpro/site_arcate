@@ -1,9 +1,7 @@
-@import "tailwindcss";
-
 :root{
   --bg:#0a0a0f; --panel:rgba(12,12,20,.85); --ink:#d7d7e0;
   --cyan:#00f5ff; --magenta:#ff006e; --yellow:#f5ff00;
-  --pixel: var(--font-pixel), monospace; --mono: var(--font-mono-body), monospace;
+  --pixel:'Press Start 2P', monospace; --mono:'Courier Prime', monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
