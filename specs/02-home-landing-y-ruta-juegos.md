@@ -1,6 +1,6 @@
 # 02 — Home de marketing en `/` y placeholder movido a `/juegos`
 
-- **Estado:** approve
+- **Estado:** Implementado
 - **Fecha:** 2026-09-01
 - **Depende de:** ninguno
 - **Objetivo (una frase):** Implementar la landing de marketing de la referencia `references/home-about/home-about` (home + navbar + estilos, sin `about.jsx`) como la ruta `/`, y mover el placeholder actual de `/` a `/juegos`.
