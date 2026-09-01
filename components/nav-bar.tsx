@@ -5,17 +5,34 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/session-context";
 
-const LINKS = [
-  { href: "/", label: "Biblioteca" },
-  { href: "/salon-de-la-fama", label: "Salón de la Fama" },
-] as const;
+// Navbar global portado de references/home-about/home-about/nav.jsx.
+// Usa el tema de la landing (.av-nav), por eso todo va envuelto en `.home-av`
+// (ver app/home-arcade.css). Aparece en / y en /juegos.
+//
+// Destinos: se apunta a las rutas reales ya construidas por el spec 01.
+// Solo "Acerca de" (fuera de alcance del spec 02) apunta provisionalmente a
+// /juegos y por eso no marca estado activo propio.
+type NavLink = {
+  href: string;
+  label: string;
+  match: (pathname: string) => boolean;
+};
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/") {
-    return pathname === "/";
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
+const LINKS: NavLink[] = [
+  { href: "/", label: "Inicio", match: (p) => p === "/" },
+  {
+    href: "/juegos",
+    label: "Biblioteca",
+    match: (p) => p.startsWith("/juego") || p.startsWith("/jugar"),
+  },
+  {
+    href: "/salon-de-la-fama",
+    label: "Salón de la Fama",
+    match: (p) => p.startsWith("/salon-de-la-fama"),
+  },
+  // Provisional: la página "Acerca de" no se implementa en el spec 02.
+  { href: "/juegos", label: "Acerca de", match: () => false },
+];
 
 export function NavBar() {
   const pathname = usePathname();
@@ -25,75 +42,87 @@ export function NavBar() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <>
-      <nav id="navbar">
-        <Link href="/" className="brand">
-          <span className="neon-cyan">ARCADE</span>
-          <span className="neon-magenta"> VAULT</span>
+    <div className="home-av">
+      <nav className="av-nav">
+        <Link href="/" className="logo">
+          <span className="logo-mark" />
+          <span className="logo-text neon-cyan">
+            ARCADE <span className="neon-magenta">VAULT</span>
+          </span>
         </Link>
 
-        <div className="nav-links">
+        <div className="links">
           {LINKS.map((link) => (
             <Link
-              key={link.href}
+              key={link.label}
               href={link.href}
-              className={`nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
+              className={link.match(pathname) ? "active" : ""}
             >
               {link.label}
             </Link>
           ))}
-
-          <div style={{ width: 1, height: 22, background: "rgba(0,245,255,.25)" }} />
-
-          {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
-              <div style={{ fontSize: 12, letterSpacing: 1 }}>{user.name}</div>
-              <button type="button" className="nav-link" style={{ fontSize: 11 }} onClick={logout}>
-                Salir
-              </button>
-            </div>
-          ) : (
-            <Link href="/auth" className="btn btn-primary">
-              INICIAR SESIÓN
-            </Link>
-          )}
         </div>
+
+        <div className="spacer" />
+
+        <div className="coin-counter">
+          <span className="coin" />
+          <span>CRÉDITOS · 03</span>
+        </div>
+
+        {user ? (
+          <button type="button" className="btn ghost auth-btn" onClick={logout}>
+            {user.name} ▾
+          </button>
+        ) : (
+          <Link href="/auth" className="btn auth-btn">
+            Iniciar Sesión
+          </Link>
+        )}
 
         <button
           type="button"
-          className="burger"
-          aria-label="Abrir menú"
+          className="btn ghost hamburger"
           onClick={() => setMenuOpen(true)}
+          aria-label="Menú"
         >
-          <span />
-          <span />
-          <span />
+          ≡
         </button>
       </nav>
 
-      <div id="mobile-menu">
-        {menuOpen ? (
-          <div className="drawer">
-            <div className="close" onClick={closeMenu}>
-              X
-            </div>
-            {LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="item" onClick={closeMenu}>
-                {link.label.toUpperCase()}
-              </Link>
-            ))}
-            <Link
-              href="/auth"
-              className="btn btn-primary"
-              style={{ marginTop: "auto" }}
-              onClick={closeMenu}
-            >
-              MI CUENTA
-            </Link>
-          </div>
-        ) : null}
-      </div>
-    </>
+      <div
+        className={`av-mobile-backdrop${menuOpen ? " open" : ""}`}
+        onClick={closeMenu}
+      />
+      <aside className={`av-mobile-panel${menuOpen ? " open" : ""}`}>
+        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
+          MENÚ
+        </div>
+        {LINKS.map((link) => (
+          <Link
+            key={link.label}
+            href={link.href}
+            className={link.match(pathname) ? "active" : ""}
+            onClick={closeMenu}
+          >
+            {link.label}
+          </Link>
+        ))}
+        <Link
+          href="/auth"
+          className={pathname.startsWith("/auth") ? "active" : ""}
+          onClick={closeMenu}
+        >
+          {user ? "Cuenta" : "Iniciar Sesión"}
+        </Link>
+        <div style={{ flex: 1 }} />
+        <div
+          className="pixel"
+          style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}
+        >
+          CRÉDITOS · 03
+        </div>
+      </aside>
+    </div>
   );
 }
