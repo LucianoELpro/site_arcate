@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Volcados de referencia (SPA y landing originales): no son código de la
+    // app, no se compilan ni se importan. Se excluyen del lint a propósito.
+    "references/**",
   ]),
 ]);
 

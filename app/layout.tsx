@@ -3,6 +3,7 @@ import { Press_Start_2P, Courier_Prime } from "next/font/google";
 import { SessionProvider } from "@/lib/session-context";
 import { NavBar } from "@/components/nav-bar";
 import "./globals.css";
+import "./home-arcade.css";
 
 const pixelFont = Press_Start_2P({
   weight: "400",
