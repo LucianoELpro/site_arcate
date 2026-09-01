@@ -7,7 +7,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);line-height:normal;min-height:100vh;overflow-x:hidden}
 a{color:var(--cyan);text-decoration:none}
 a:hover{color:var(--yellow)}
 input,button{font-family:inherit}

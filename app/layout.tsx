@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Press_Start_2P, Courier_Prime } from "next/font/google";
+import { SessionProvider } from "@/lib/session-context";
+import { NavBar } from "@/components/nav-bar";
 import "./globals.css";
 
 const pixelFont = Press_Start_2P({
@@ -32,7 +34,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="bg-glow" />
         <div className="bg-grid" />
         <div className="bg-scanlines" />
-        <div id="app">{children}</div>
+        <div id="app">
+          <SessionProvider>
+            <NavBar />
+            {children}
+          </SessionProvider>
+        </div>
       </body>
     </html>
   );
