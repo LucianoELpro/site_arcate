@@ -9,9 +9,7 @@ import { useSession } from "@/lib/session-context";
 // Usa el tema de la landing (.av-nav), por eso todo va envuelto en `.home-av`
 // (ver app/home-arcade.css). Aparece en / y en /juegos.
 //
-// Destinos: se apunta a las rutas reales ya construidas por el spec 01.
-// Solo "Acerca de" (fuera de alcance del spec 02) apunta provisionalmente a
-// /juegos y por eso no marca estado activo propio.
+// Destinos: se apunta a las rutas reales ya construidas por los specs 01–03.
 type NavLink = {
   href: string;
   label: string;
@@ -30,8 +28,11 @@ const LINKS: NavLink[] = [
     label: "Salón de la Fama",
     match: (p) => p.startsWith("/salon-de-la-fama"),
   },
-  // Provisional: la página "Acerca de" no se implementa en el spec 02.
-  { href: "/juegos", label: "Acerca de", match: () => false },
+  {
+    href: "/sobre-nosotros",
+    label: "Acerca de",
+    match: (p) => p.startsWith("/sobre-nosotros"),
+  },
 ];
 
 export function NavBar() {
