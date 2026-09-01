@@ -1,6 +1,6 @@
 # 01 — MVP visual: todas las pantallas de Arcade Vault
 
-- **Estado:** Approved
+- **Estado:** Implementado
 - **Fecha:** 2026-08-30
 - **Depende de:** ninguno
 - **Objetivo (una frase):** Implementar todas las pantallas de Arcade Vault (Biblioteca, Detalle, Jugador, Autenticación, Salón de la Fama) como rutas reales de Next.js reutilizando el tema visual ya existente, sin implementar ningún motor de juego real.
